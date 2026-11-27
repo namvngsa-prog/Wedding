@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wedding Invitation | Pichet &amp; Patcharaporn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-color: #faf7f2;
+      --card-bg: #ffffff;
+      --primary: #8c6d53;
+      --primary-dark: #6b503a;
+      --accent: #d4af37;
+      --text-main: #3a332c;
+      --text-muted: #7a7067;
+      --env-color: #e8dfd5;
+      --env-flap: #dfd3c3;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .font-serif {
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    /* ================= 1. หน้าซองจดหมาย (Envelope Overlay) ================= */
+    #envelope-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #f3ece4 0%, #e4d8ca 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      padding: 20px;
+    }
+
+    #envelope-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .envelope-wrapper {
+      position: relative;
+      width: 320px;
+      height: 220px;
+      background: var(--env-color);
+      border-radius: 8px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .envelope-wrapper:hover {
+      transform: translateY(-4px);
+    }
+
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 115px;
+      background: var(--env-flap);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      transform-origin: top;
+      transition: transform 0.6s ease;
+      z-index: 3;
+    }
+
+    .envelope-wrapper.open .envelope-flap {
+      transform: rotateX(180deg);
+      z-index: 1;
+    }
+
+    .envelope-pocket {
+      position: absolute;
+      inset: 0;
+      background: var(--env-color);
+      clip-path: polygon(0 0, 50% 52%, 100% 0, 100% 100%, 0 100%);
+      border-radius: 0 0 8px 8px;
+      z-index: 2;
+    }
+
+    .letter-preview {
+      position: absolute;
+      bottom: 10px;
+      left: 15px;
+      right: 15px;
+      height: 180px;
+      background: #fff;
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      transition: transform 0.7s ease 0.2s;
+      z-index: 1;
+    }
+
+    .envelope-wrapper.open .letter-preview {
+      transform: translateY(-90px);
+      z-index: 4;
+    }
+
+    .wax-seal {
+      position: absolute;
+      top: 95px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 56px;
+      height: 56px;
+      background: radial-gradient(circle at 30% 30%, #b88a44, #8c6223);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 5;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      border: 2px dashed rgba(255,255,255,0.4);
+    }
+
+    .envelope-wrapper.open .wax-seal {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.5);
+    }
+
+    .tap-hint {
+      margin-top: 28px;
+      font-size: 14px;
+      color: var(--primary-dark);
+      letter-spacing: 1px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* ================= ปุ่มควบคุมเพลงลอยมุมขวาล่าง ================= */
+    .music-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(140, 109, 83, 0.9);
+      color: #fff;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
+      z-index: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .music-btn.playing {
+      animation: spin 6s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ================= 2. เนื้อหาหลักของการ์ด (Main Content) ================= */
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      min-height: 100vh;
+      box-shadow: 0 0 30px rgba(0,0,0,0.04);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .container.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    section {
+      padding: 48px 28px;
+      text-align: center;
+      border-bottom: 1px solid #f0ebe4;
+    }
+
+    section:last-child {
+      border-bottom: none;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(to bottom, rgba(250, 247, 242, 0.85), rgba(255, 255, 255, 0.95)),
+                  url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80') center/cover;
+      padding: 72px 28px 56px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .couple-names {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--primary-dark);
+      line-height: 1.2;
+      margin: 12px 0;
+    }
+
+    .couple-names span {
+      display: block;
+      font-size: 24px;
+      font-style: italic;
+      color: var(--accent);
+      margin: 4px 0;
+    }
+
+    .wedding-date {
+      font-size: 18px;
+      font-weight: 500;
+      margin-top: 16px;
+      color: var(--text-main);
+    }
+
+    /* Countdown */
+    .countdown {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .time-box {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #e6ddd2;
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 68px;
+    }
+
+    .time-box .num {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--primary-dark);
+      display: block;
+    }
+
+    .time-box .label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Section Titles */
+    h2 {
+      font-size: 28px;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+    }
+
+    .section-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    /* Schedule */
+    .timeline {
+      text-align: left;
+      max-width: 340px;
+      margin: 0 auto;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      padding-bottom: 20px;
+      position: relative;
+    }
+
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 52px;
+      top: 26px;
+      bottom: 0;
+      width: 1px;
+      background: #dfd3c3;
+    }
+
+    .time {
+      font-weight: 600;
+      color: var(--primary);
+      min-width: 65px;
+      font-size: 14px;
+    }
+
+    .event-detail h4 {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .event-detail p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Dress Code */
+    .dress-code {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .color-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* ================= แกลเลอรีรูปพรีเวดดิ้ง (Photo Gallery) ================= */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .gallery-item {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      aspect-ratio: 3 / 4;
+      cursor: pointer;
+    }
+
+    .gallery-item.wide {
+      grid-column: span 2;
+      aspect-ratio: 16 / 10;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Lightbox ขยายรูปเต็มจอ */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    #lightbox img {
+      max-width: 100%;
+      max-height: 85vh;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    #lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      color: #fff;
+      font-size: 32px;
+      cursor: pointer;
+    }
+
+    /* Location & Map */
+    .venue-card {
+      background: var(--bg-color);
+      padding: 24px 20px;
+      border-radius: 12px;
+    }
+
+    .venue-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 6px;
+    }
+
+    .map-frame {
+      width: 100%;
+      height: 220px;
+      border: 0;
+      border-radius: 10px;
+      margin: 16px 0;
+    }
+
+    /* ================= QR Code รับซองออนไลน์ ================= */
+    .gift-card {
+      background: var(--bg-color);
+      border: 1px dashed #d5c7b8;
+      border-radius: 14px;
+      padding: 24px 20px;
+      max-width: 360px;
+      margin: 0 auto;
+    }
+
+    .qr-wrapper {
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      display: inline-block;
+      margin: 12px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .qr-wrapper img {
+      width: 180px;
+      height: 180px;
+      display: block;
+    }
+
+    .account-info {
+      font-size: 14px;
+      margin-top: 8px;
+      color: var(--text-main);
+    }
+
+    .account-number {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary-dark);
+      letter-spacing: 1px;
+      margin: 4px 0 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 11px 26px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      font-family: 'Prompt', sans-serif;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 7px 18px;
+      font-size: 13px;
+    }
+
+    /* RSVP Form */
+    .rsvp-form {
+      text-align: left;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #dcd3c8;
+      border-radius: 8px;
+      font-family: 'Prompt', sans-serif;
+      font-size: 14px;
+      background: #fdfcfb;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn-submit {
+      width: 100%;
+      margin-top: 8px;
+      font-size: 15px;
+    }
+
+    #rsvp-status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+
+    .status-success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: #f5f0e9;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ปุ่มเปิด/ปิดเพลงมุมขวาล่าง -->
+  <button id="music-toggle" class="music-btn" onclick="toggleMusic()" title="เปิด/ปิดเพลงบรรเลง">♫</button>
+
+  <!-- ตัวเล่น YouTube ซ่อนไว้สำหรับเล่นเพลง Canon in D - Pachelbel (Video ID: 6jSLH9CDPPQ) -->
+  <div id="yt-player-container" style="position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; bottom: 0; left: 0; overflow: hidden;">
+    <div id="yt-player"></div>
+  </div>
+
+  <!-- Lightbox สำหรับขยายดูรูปแกลเลอรี -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <span id="lightbox-close">&times;</span>
+    <img id="lightbox-img" src="" alt="Pre-wedding Photo">
+  </div>
+
+  <!-- ================= 1. หน้าซองจดหมาย ================= -->
+  <div id="envelope-overlay">
+    <div class="envelope-wrapper" id="envelope" onclick="openInvitation()">
+      <div class="envelope-flap"></div>
+      <div class="letter-preview">
+        <p style="font-size: 11px; color: #8c6d53; letter-spacing: 2px;">WEDDING INVITATION</p>
+        <h3 class="font-serif" style="font-size: 24px; color: #6b503a; margin-top: 8px;">P &amp; P</h3>
+        <p style="font-size: 12px; color: #7a7067; margin-top: 6px;">ขอเรียนเชิญร่วมเป็นเกียรติในงานมงคลสมรส</p>
+      </div>
+      <div class="envelope-pocket"></div>
+      <div class="wax-seal">เปิด</div>
+    </div>
+    <p class="tap-hint">แตะที่ตราประทับเพื่อเปิดการ์ดเชิญ</p>
+  </div>
+
+  <!-- ================= 2. เนื้อหาการ์ดเชิญ ================= -->
+  <main class="container" id="main-card">
+    
+    <!-- ส่วนหัว (Hero) -->
+    <section class="hero">
+      <p class="subtitle">Together with their families</p>
+      <p style="font-size: 14px; color: var(--text-muted);">ขอเรียนเชิญท่านร่วมเป็นเกียรติในพิธีมงคลสมรสระหว่าง</p>
+      
+      <h1 class="couple-names font-serif">
+        Pichet (Oid)
+        <span>&amp;</span>
+        Patcharaporn (Ray)
+      </h1>
+
+      <p class="wedding-date">วันเสาร์ที่ 19 ธันวาคม 2569</p>
+      <p style="font-size: 14px; color: var(--text-muted);">ณ ห้องแกรนด์บอลรูม โรงแรมเดอะ สุโกศล กรุงเทพฯ</p>
+
+      <!-- นับถอยหลัง -->
+      <div class="countdown" id="countdown">
+        <div class="time-box"><span class="num" id="days">00</span><span class="label">วัน</span></div>
+        <div class="time-box"><span class="num" id="hours">00</span><span class="label">ชั่วโมง</span></div>
+        <div class="time-box"><span class="num" id="minutes">00</span><span class="label">นาที</span></div>
+        <div class="time-box"><span class="num" id="seconds">00</span><span class="label">วินาที</span></div>
+      </div>
+    </section>
+
+    <!-- กำหนดการ & ธีมสี -->
+    <section>
+      <h2 class="font-serif">Schedule</h2>
+      <p class="section-desc">กำหนดการพิธีการ</p>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="time">07:30 น.</div>
+          <div class="event-detail">
+            <h4>พิธีสงฆ์และตักบาตร</h4>
+            <p>ร่วมทำบุญตักบาตรเพื่อความเป็นสิริมงคล</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="time">08:30 น.</div>
+          <div class="event-detail">
+            <h4>พิธีแห่ขันหมาก</h4>
+            <p>ขบวนขันหมากและพิธีสู่ขอ</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="time">09:30 น.</div>
+          <div class="event-detail">
+            <h4>พิธีหมั้นและหลั่งน้ำพระพุทธมนต์</h4>
+            <p>สวมแหวนหมั้น ยกน้ำชา และรดน้ำสังข์</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="time">11:30 น.</div>
+          <div class="event-detail">
+            <h4>ฉลองมงคลสมรส</h4>
+            <p>ร่วมรับประทานอาหารกลางวัน (โต๊ะจีน)</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 32px;">
+        <p style="font-size: 14px; font-weight: 500; color: var(--primary-dark);">Dress Code (ธีมสีการแต่งกาย)</p>
+        <div class="dress-code">
+          <div class="color-dot" style="background: #f5ebe0;" title="Cream"></div>
+          <div class="color-dot" style="background: #d5bdaf;" title="Beige"></div>
+          <div class="color-dot" style="background: #a3b18a;" title="Sage Green"></div>
+          <div class="color-dot" style="background: #8c6d53;" title="Earth Brown"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- แกลเลอรีรูปพรีเวดดิ้ง -->
+    <section>
+      <h2 class="font-serif">Our Moments</h2>
+      <p class="section-desc">แกลเลอรีภาพแห่งความทรงจำ (แตะที่รูปเพื่อขยาย)</p>
+
+      <div class="gallery-grid">
+        <div class="gallery-item wide" onclick="openLightbox(this)">
+          <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80" alt="Pre-wedding 1">
+        </div>
+        <div class="gallery-item" onclick="openLightbox(this)">
+          <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=600&q=80" alt="Pre-wedding 2">
+        </div>
+        <div class="gallery-item" onclick="openLightbox(this)">
+          <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=600&q=80" alt="Pre-wedding 3">
+        </div>
+        <div class="gallery-item" onclick="openLightbox(this)">
+          <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=600&q=80" alt="Pre-wedding 4">
+        </div>
+        <div class="gallery-item" onclick="openLightbox(this)">
+          <img src="https://images.unsplash.com/photo-1529634806980-85c3dd6d34ac?auto=format&fit=crop&w=600&q=80" alt="Pre-wedding 5">
+        </div>
+      </div>
+    </section>
+
+    <!-- สถานที่จัดงาน & แผนที่ -->
+    <section>
+      <h2 class="font-serif">Location</h2>
+      <p class="section-desc">สถานที่จัดงานและการเดินทาง</p>
+
+      <div class="venue-card">
+        <div class="venue-name">โรงแรมเดอะ สุโกศล กรุงเทพฯ</div>
+        <p style="font-size: 13px; color: var(--text-muted);">477 ถนนศรีอยุธยา แขวงถนนพญาไท เขตราชเทวี กรุงเทพฯ 10400</p>
+        
+        <iframe 
+          class="map-frame"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.334048701828!2d100.53175731534712!3d13.75871999034297!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29ec902821c3b%3A0x628044f552216448!2sThe%20Sukosol%20Hotel%2C%20Bangkok!5e0!3m2!1sth!2sth!4v1690000000000!5m2!1sth!2sth" 
+          allowfullscreen="" 
+          loading="lazy">
+        </iframe>
+
+        <a href="https://maps.google.com/?q=The+Sukosol+Hotel+Bangkok" target="_blank" class="btn btn-outline">
+          เปิดใน Google Maps นำทาง
+        </a>
+      </div>
+    </section>
+
+    <!-- QR Code รับซองออนไลน์ -->
+    <section>
+      <h2 class="font-serif">Wedding Gift</h2>
+      <p class="section-desc">สำหรับท่านที่ไม่สะดวกเดินทางมาร่วมงาน สามารถร่วมแสดงความยินดีผ่านช่องทางออนไลน์</p>
+
+      <div class="gift-card">
+        <p style="font-size: 13px; color: var(--primary); font-weight: 500;">สแกน QR Code พร้อมเพย์ / Mobile Banking</p>
+        
+        <div class="qr-wrapper">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=PromptPay-Example-0812345678" alt="QR Code รับซองออนไลน์">
+        </div>
+
+        <div class="account-info">
+          <p>ธนาคารกสิกรไทย (KBank)</p>
+          <p style="font-size: 13px; color: var(--text-muted);">ชื่อบัญชี: Pichet &amp; Patcharaporn</p>
+          <div class="account-number" id="accNum">012-3-45678-9</div>
+          <button type="button" class="btn btn-outline btn-sm" id="copyBtn" onclick="copyAccount()">คัดลอกเลขบัญชี</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ฟอร์มตอบรับเข้าร่วมงาน (RSVP) -->
+    <section>
+      <h2 class="font-serif">RSVP</h2>
+      <p class="section-desc">กรุณายืนยันการเข้าร่วมงานภายในวันที่ 1 ธันวาคม 2569</p>
+
+      <form class="rsvp-form" id="rsvpForm" onsubmit="submitRSVP(event)">
+        <div class="form-group">
+          <label for="guestName">ชื่อ - นามสกุล (หรือชื่อเล่น) *</label>
+          <input type="text" id="guestName" class="form-control" placeholder="ระบุชื่อของท่าน" required>
+        </div>
+
+        <div class="form-group">
+          <label for="attendance">การเข้าร่วมงาน *</label>
+          <select id="attendance" class="form-control" required onchange="toggleGuestCount()">
+            <option value="เข้าร่วมงาน">ยินดีเข้าร่วมงาน</option>
+            <option value="ไม่สะดวกเข้าร่วม">ขออภัย ไม่สะดวกเข้าร่วมงาน</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="guestCountGroup">
+          <label for="guestCount">จำนวนผู้เข้าร่วม (รวมตัวท่านเอง)</label>
+          <select id="guestCount" class="form-control">
+            <option value="1">1 ท่าน</option>
+            <option value="2">2 ท่าน</option>
+            <option value="3">3 ท่าน</option>
+            <option value="4">4 ท่าน</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="side">ฝ่ายเจ้าบ่าว / เจ้าสาว</label>
+          <select id="side" class="form-control">
+            <option value="ฝ่ายเจ้าบ่าว (Oid)">เพื่อน/ญาติ ฝ่ายเจ้าบ่าว (Oid)</option>
+            <option value="ฝ่ายเจ้าสาว (Ray)">เพื่อน/ญาติ ฝ่ายเจ้าสาว (Ray)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="wishes">คำอวยพรถึงบ่าวสาว (ไม่บังคับ)</label>
+          <textarea id="wishes" class="form-control" rows="3" placeholder="เขียนคำอวยพรที่นี่..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-submit" id="submitBtn">ส่งข้อมูลตอบรับ</button>
+        <div id="rsvp-status"></div>
+      </form>
+    </section>
+
+    <footer>
+      <p class="font-serif" style="font-size: 16px; color: var(--primary-dark); margin-bottom: 4px;">Pichet (Oid) &amp; Patcharaporn (Ray)</p>
+      <p>Thank you for being part of our special day.</p>
+    </footer>
+
+  </main>
+
+  <script>
+    const musicBtn = document.getElementById('music-toggle');
+    let ytPlayer;
+    let isPlayerReady = false;
+    let isPlaying = false;
+    let pendingPlayOnOpen = false;
+
+    // 1. โหลด YouTube IFrame API สำหรับเล่นเพลง Canon in D - Pachelbel (6jSLH9CDPPQ)
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('yt-player', {
+        height: '1',
+        width: '1',
+        videoId: '6jSLH9CDPPQ',
+        playerVars: {
+          autoplay: 0,
+          loop: 1,
+          playlist: '6jSLH9CDPPQ',
+          playsinline: 1
+        },
+        events: {
+          'onReady': () => {
+            isPlayerReady = true;
+            ytPlayer.setVolume(40);
+            if (pendingPlayOnOpen) {
+              startMusic();
+              pendingPlayOnOpen = false;
+            }
+          }
+        }
+      });
+    }
+
+    function startMusic() {
+      if (isPlayerReady && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+        ytPlayer.playVideo();
+        isPlaying = true;
+        musicBtn.classList.add('playing');
+        musicBtn.style.opacity = '1';
+      }
+    }
+
+    // 2. ฟังก์ชันเปิดซองจดหมาย + เริ่มเล่นเพลงคลอเบาๆ
+    function openInvitation() {
+      const envelope = document.getElementById('envelope');
+      const overlay = document.getElementById('envelope-overlay');
+      const mainCard = document.getElementById('main-card');
+
+      envelope.classList.add('open');
+      musicBtn.style.display = 'flex';
+
+      if (isPlayerReady) {
+        startMusic();
+      } else {
+        pendingPlayOnOpen = true;
+      }
+
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        mainCard.classList.add('visible');
+      }, 900);
+    }
+
+    // 3. ควบคุมปุ่มเปิด/ปิดเพลงมุมขวาล่าง
+    function toggleMusic() {
+      if (!isPlayerReady || !ytPlayer) return;
+
+      if (isPlaying) {
+        ytPlayer.pauseVideo();
+        musicBtn.classList.remove('playing');
+        musicBtn.style.opacity = '0.6';
+        isPlaying = false;
+      } else {
+        startMusic();
+      }
+    }
+
+    // 4. ฟังก์ชันเปิด/ปิด Lightbox ดูรูปขยายเต็มจอ
+    function openLightbox(element) {
+      const imgSrc = element.querySelector('img').src;
+      document.getElementById('lightbox-img').src = imgSrc;
+      document.getElementById('lightbox').style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+
+    // 5. ฟังก์ชันคัดลอกเลขบัญชีธนาคาร
+    function copyAccount() {
+      const accText = document.getElementById('accNum').innerText.replace(/-/g, '');
+      navigator.clipboard.writeText(accText).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.innerText = 'คัดลอกเลขบัญชีแล้ว ✓';
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#fff';
+        setTimeout(() => {
+          btn.innerText = 'คัดลอกเลขบัญชี';
+          btn.style.background = 'transparent';
+          btn.style.color = 'var(--primary)';
+        }, 2500);
+      });
+    }
+
+    // 6. ระบบนับถอยหลังวันงาน
+    const weddingDate = new Date("2026-12-19T08:30:00").getTime();
+
+    const timer = setInterval(function() {
+      const now = new Date().getTime();
+      const distance = weddingDate - now;
+
+      if (distance < 0) {
+        clearInterval(timer);
+        document.getElementById("countdown").innerHTML = "<p style='color: var(--primary-dark); font-weight: 500;'>ถึงวันสำคัญของเราแล้ว!</p>";
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById("days").innerText = String(days).padStart(2, '0');
+      document.getElementById("hours").innerText = String(hours).padStart(2, '0');
+      document.getElementById("minutes").innerText = String(minutes).padStart(2, '0');
+      document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
+    }, 1000);
+
+    // 7. ซ่อน/แสดงช่องจำนวนคน
+    function toggleGuestCount() {
+      const attendance = document.getElementById('attendance').value;
+      const group = document.getElementById('guestCountGroup');
+      group.style.display = (attendance === 'ไม่สะดวกเข้าร่วม') ? 'none' : 'block';
+    }
+
+    // 8. ส่งฟอร์ม RSVP
+    function submitRSVP(event) {
+      event.preventDefault();
+      
+      const btn = document.getElementById('submitBtn');
+      const statusBox = document.getElementById('rsvp-status');
+      
+      const formData = {
+        name: document.getElementById('guestName').value,
+        attendance: document.getElementById('attendance').value,
+        count: document.getElementById('attendance').value === 'เข้าร่วมงาน' ? document.getElementById('guestCount').value : '0',
+        side: document.getElementById('side').value,
+        wishes: document.getElementById('wishes').value
+      };
+
+      btn.disabled = true;
+      btn.innerText = 'กำลังบันทึกข้อมูล...';
+
+      const GOOGLE_SCRIPT_URL = ""; 
+
+      if (GOOGLE_SCRIPT_URL) {
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        })
+        .then(() => showSuccess(formData.name))
+        .catch(() => showSuccess(formData.name));
+      } else {
+        setTimeout(() => {
+          console.log("ข้อมูล RSVP:", formData);
+          showSuccess(formData.name);
+        }, 600);
+      }
+
+      function showSuccess(name) {
+        btn.innerText = 'ส่งข้อมูลเรียบร้อยแล้ว';
+        statusBox.style.display = 'block';
+        statusBox.className = 'status-success';
+        statusBox.innerHTML = `ขอบคุณคุณ <strong>${name}</strong> สำหรับการตอบรับครับ!`;
+        document.getElementById('rsvpForm').reset();
+      }
+    }
+  </script>
+</body>
+</html>
