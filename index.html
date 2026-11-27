@@ -161,25 +161,41 @@
       50% { opacity: 1; }
     }
 
-    /* ================= ปุ่มควบคุมเพลงลอยมุมขวาล่าง ================= */
-    .music-btn {
+    /* ================= ปุ่มควบคุมลอยมุมขวาล่าง ================= */
+    .floating-controls {
       position: fixed;
       bottom: 20px;
       right: 20px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 900;
+    }
+
+    .float-btn {
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: rgba(140, 109, 83, 0.9);
+      background: rgba(140, 109, 83, 0.92);
       color: #fff;
       border: 2px solid #fff;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       cursor: pointer;
-      z-index: 900;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      transition: transform 0.3s ease, opacity 0.3s ease;
+      font-size: 16px;
+      transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease;
+    }
+
+    .float-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.05);
+    }
+
+    .float-btn.paused {
+      opacity: 0.65;
+      background: rgba(122, 112, 103, 0.9);
     }
 
     .music-btn.playing {
@@ -567,7 +583,7 @@
 
     footer {
       text-align: center;
-      padding: 28px 20px;
+      padding: 28px 20px 80px;
       font-size: 12px;
       color: var(--text-muted);
       background: #f5f0e9;
@@ -576,8 +592,11 @@
 </head>
 <body>
 
-  <!-- ปุ่มเปิด/ปิดเพลงมุมขวาล่าง -->
-  <button id="music-toggle" class="music-btn" onclick="toggleMusic()" title="เปิด/ปิดเพลงบรรเลง">♫</button>
+  <!-- ปุ่มควบคุมโหมดเล่นอัตโนมัติและเพลงลอยมุมขวาล่าง -->
+  <div class="floating-controls" id="floating-controls">
+    <button id="scroll-toggle" class="float-btn" onclick="toggleAutoScroll()" title="หยุด/เล่นเลื่อนอัตโนมัติ">⏸</button>
+    <button id="music-toggle" class="float-btn music-btn" onclick="toggleMusic()" title="เปิด/ปิดเพลงบรรเลง">♫</button>
+  </div>
 
   <!-- ตัวเล่น YouTube ซ่อนไว้สำหรับเล่นเพลง Canon in D - Pachelbel (Video ID: 6jSLH9CDPPQ) -->
   <div id="yt-player-container" style="position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; bottom: 0; left: 0; overflow: hidden;">
@@ -800,11 +819,21 @@
   </main>
 
   <script>
+    const floatingControls = document.getElementById('floating-controls');
     const musicBtn = document.getElementById('music-toggle');
+    const scrollBtn = document.getElementById('scroll-toggle');
+
     let ytPlayer;
     let isPlayerReady = false;
     let isPlaying = false;
     let pendingPlayOnOpen = false;
+
+    // ตัวแปรสำหรับโหมดเลื่อนอัตโนมัติเหมือนวิดีโอ (ช้าลง 30% จาก 28 -> 19.6 px/sec)
+    let autoScrollFrame = null;
+    let isAutoScrolling = false;
+    let scrollAccumulator = 0;
+    const SCROLL_SPEED_PX_PER_SEC = 19.6;
+    let lastFrameTime = null;
 
     // 1. โหลด YouTube IFrame API สำหรับเล่นเพลง Canon in D - Pachelbel (6jSLH9CDPPQ)
     const tag = document.createElement('script');
@@ -845,14 +874,14 @@
       }
     }
 
-    // 2. ฟังก์ชันเปิดซองจดหมาย + เริ่มเล่นเพลงคลอเบาๆ
+    // 2. ฟังก์ชันเปิดซองจดหมาย + เริ่มเพลง + เริ่มเลื่อนเหมือนวิดีโอ
     function openInvitation() {
       const envelope = document.getElementById('envelope');
       const overlay = document.getElementById('envelope-overlay');
       const mainCard = document.getElementById('main-card');
 
       envelope.classList.add('open');
-      musicBtn.style.display = 'flex';
+      floatingControls.style.display = 'flex';
 
       if (isPlayerReady) {
         startMusic();
@@ -863,10 +892,78 @@
       setTimeout(() => {
         overlay.classList.add('hidden');
         mainCard.classList.add('visible');
+
+        setTimeout(() => {
+          startAutoScroll();
+        }, 600);
       }, 900);
     }
 
-    // 3. ควบคุมปุ่มเปิด/ปิดเพลงมุมขวาล่าง
+    // 3. ระบบเลื่อนหน้าลงอัตโนมัติ (Auto-Scroll)
+    function startAutoScroll() {
+      if (isAutoScrolling) return;
+      isAutoScrolling = true;
+      scrollBtn.innerText = '⏸';
+      scrollBtn.classList.remove('paused');
+      lastFrameTime = performance.now();
+      scrollAccumulator = 0;
+
+      function step(now) {
+        if (!isAutoScrolling) return;
+
+        const deltaSeconds = (now - lastFrameTime) / 1000;
+        lastFrameTime = now;
+
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (window.scrollY < maxScroll - 1) {
+          scrollAccumulator += SCROLL_SPEED_PX_PER_SEC * deltaSeconds;
+          if (scrollAccumulator >= 1) {
+            const stepPx = Math.floor(scrollAccumulator);
+            window.scrollBy(0, stepPx);
+            scrollAccumulator -= stepPx;
+          }
+          autoScrollFrame = requestAnimationFrame(step);
+        } else {
+          stopAutoScroll();
+        }
+      }
+
+      autoScrollFrame = requestAnimationFrame(step);
+    }
+
+    function stopAutoScroll() {
+      isAutoScrolling = false;
+      scrollBtn.innerText = '▶';
+      scrollBtn.classList.add('paused');
+      if (autoScrollFrame) {
+        cancelAnimationFrame(autoScrollFrame);
+        autoScrollFrame = null;
+      }
+    }
+
+    function toggleAutoScroll() {
+      if (isAutoScrolling) {
+        stopAutoScroll();
+      } else {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (window.scrollY >= maxScroll - 5) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setTimeout(() => startAutoScroll(), 600);
+        } else {
+          startAutoScroll();
+        }
+      }
+    }
+
+    ['wheel', 'touchstart', 'pointerdown'].forEach(evt => {
+      window.addEventListener(evt, () => {
+        if (isAutoScrolling) {
+          stopAutoScroll();
+        }
+      }, { passive: true });
+    });
+
+    // 4. ควบคุมปุ่มเปิด/ปิดเพลงมุมขวาล่าง
     function toggleMusic() {
       if (!isPlayerReady || !ytPlayer) return;
 
@@ -880,8 +977,9 @@
       }
     }
 
-    // 4. ฟังก์ชันเปิด/ปิด Lightbox ดูรูปขยายเต็มจอ
+    // 5. ฟังก์ชันเปิด/ปิด Lightbox ดูรูปขยายเต็มจอ
     function openLightbox(element) {
+      stopAutoScroll();
       const imgSrc = element.querySelector('img').src;
       document.getElementById('lightbox-img').src = imgSrc;
       document.getElementById('lightbox').style.display = 'flex';
@@ -891,7 +989,7 @@
       document.getElementById('lightbox').style.display = 'none';
     }
 
-    // 5. ฟังก์ชันคัดลอกเลขบัญชีธนาคาร
+    // 6. ฟังก์ชันคัดลอกเลขบัญชีธนาคาร
     function copyAccount() {
       const accText = document.getElementById('accNum').innerText.replace(/-/g, '');
       navigator.clipboard.writeText(accText).then(() => {
@@ -907,7 +1005,7 @@
       });
     }
 
-    // 6. ระบบนับถอยหลังวันงาน
+    // 7. ระบบนับถอยหลังวันงาน
     const weddingDate = new Date("2026-12-19T08:30:00").getTime();
 
     const timer = setInterval(function() {
@@ -931,16 +1029,17 @@
       document.getElementById("seconds").innerText = String(seconds).padStart(2, '0');
     }, 1000);
 
-    // 7. ซ่อน/แสดงช่องจำนวนคน
+    // 8. ซ่อน/แสดงช่องจำนวนคน
     function toggleGuestCount() {
       const attendance = document.getElementById('attendance').value;
       const group = document.getElementById('guestCountGroup');
       group.style.display = (attendance === 'ไม่สะดวกเข้าร่วม') ? 'none' : 'block';
     }
 
-    // 8. ส่งฟอร์ม RSVP
+    // 9. ส่งฟอร์ม RSVP
     function submitRSVP(event) {
       event.preventDefault();
+      stopAutoScroll();
       
       const btn = document.getElementById('submitBtn');
       const statusBox = document.getElementById('rsvp-status');
